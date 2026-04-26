@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ExpenseCloud</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:sans-serif;}
+    body{background:#f5f5f5;color:#222;}
+    .topbar{background:#fff;padding:16px 24px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;}
+    .topbar h1{font-size:18px;color:#1D9E75;}
+    .container{max-width:1100px;margin:24px auto;padding:0 16px;}
+    .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+    .mcard{background:#fff;border-radius:10px;padding:16px;border:1px solid #eee;}
+    .mcard .label{font-size:11px;color:#888;margin-bottom:6px;}
+    .mcard .value{font-size:22px;font-weight:600;}
+    .mcard .sub{font-size:11px;margin-top:4px;}
+    .row2{display:grid;grid-template-columns:1.5fr 1fr;gap:16px;margin-bottom:20px;}
+    .card{background:#fff;border-radius:10px;padding:16px;border:1px solid #eee;}
+    .card h3{font-size:13px;font-weight:600;margin-bottom:12px;color:#333;}
+    .txn{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f0f0f0;}
+    .txn:last-child{border-bottom:none;}
+    .txn-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;}
+    .txn-desc{flex:1;}
+    .txn-desc .name{font-size:13px;font-weight:500;}
+    .txn-desc .meta{font-size:11px;color:#888;}
+    .txn-amt{font-size:13px;font-weight:600;color:#c0392b;}
+    .del-btn{background:none;border:none;color:#ccc;cursor:pointer;font-size:16px;padding:2px 6px;}
+    .del-btn:hover{color:#e74c3c;}
+    .add-form{background:#fff;border-radius:10px;padding:16px;border:1px solid #eee;margin-bottom:20px;}
+    .add-form h3{font-size:13px;font-weight:600;margin-bottom:12px;}
+    .form-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:10px;align-items:end;}
+    .form-row input,.form-row select{width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:7px;font-size:13px;}
+    .form-row button{padding:8px 18px;background:#1D9E75;color:#fff;border:none;border-radius:7px;font-size:13px;cursor:pointer;}
+    .budget-form{display:flex;gap:10px;align-items:center;margin-top:8px;}
+    .budget-form input{padding:7px 10px;border:1px solid #ddd;border-radius:7px;font-size:13px;width:140px;}
+    .budget-form button{padding:7px 14px;background:#1D9E75;color:#fff;border:none;border-radius:7px;font-size:12px;cursor:pointer;}
+    .progress{height:10px;background:#eee;border-radius:5px;margin:8px 0;overflow:hidden;}
+    .progress-bar{height:100%;border-radius:5px;}
+    .green{color:#1D9E75;} .red{color:#c0392b;} .orange{color:#e67e22;}
+  </style>
+</head>
+<body>
+<div class="topbar">
+  <h1>&#9729; ExpenseCloud</h1>
+  <span style="font-size:13px;color:#888;">Small Business Expense Tracker</span>
+</div>
+
+<div class="container">
+  <div class="metrics">
+    <div class="mcard">
+      <div class="label">Total spent</div>
+      <div class="value">&#8377;{{ "{:,.0f}".format(total) }}</div>
+      <div class="sub {{ 'red' if total > budget else 'green' }}">
+        {{ "%.0f"|format(total/budget*100) }}% of budget
+      </div>
+    </div>
+    <div class="mcard">
+      <div class="label">Budget left</div>
+      <div class="value">&#8377;{{ "{:,.0f}".format([left,0]|max) }}</div>
+      <div class="sub {{ 'red' if left < 0 else 'green' }}">
+        {{ 'Over budget!' if left < 0 else 'Remaining' }}
+      </div>
+    </div>
+    <div class="mcard">
+      <div class="label">Transactions</div>
+      <div class="value">{{ expenses|length }}</div>
+      <div class="sub" style="color:#888">This month</div>
+    </div>
+    <div class="mcard">
+      <div class="label">Monthly budget</div>
+      <div class="value" style="font-size:16px;">&#8377;{{ "{:,.0f}".format(budget) }}</div>
+      <form class="budget-form" method="POST" action="/budget">
+        <input name="budget" type="number" placeholder="New budget">
+        <button type="submit">Update</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="add-form">
+    <h3>+ Add new expense</h3>
+    <form method="POST" action="/add">
+      <div class="form-row">
+        <input name="description" placeholder="Description" required>
+        <input name="amount" type="number" placeholder="Amount (₹)" required min="1">
+        <select name="category">
+          <option>Hosting</option><option>Marketing</option>
+          <option>Salaries</option><option>Utilities</option>
+          <option>Transport</option><option>Other</option>
+        </select>
+        <input name="date" type="date" required>
+        <button type="submit">Add</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="row2">
+    <div class="card">
+      <h3>Spend by category</h3>
+      <div style="position:relative;height:220px;">
+        <canvas id="barChart" role="img" aria-label="Bar chart of expenses by category">Expenses by category.</canvas>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Category breakdown</h3>
+      {% for cat, val in cat_totals.items()|sort(attribute='1', reverse=True) %}
+      <div style="margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;">
+          <span>{{ cat }}</span><span>&#8377;{{ "{:,.0f}".format(val) }}</span>
+        </div>
+        <div class="progress">
+          <div class="progress-bar" style="width:{{ (val/total*100)|int if total else 0 }}%;background:#1D9E75;"></div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>All transactions</h3>
+    {% if expenses %}
+      {% for e in expenses %}
+      <div class="txn">
+        <div class="txn-icon" style="background:#E1F5EE;">
+          {% if e.category == 'Hosting' %}☁
+          {% elif e.category == 'Marketing' %}📣
+          {% elif e.category == 'Salaries' %}👥
+          {% elif e.category == 'Utilities' %}⚡
+          {% elif e.category == 'Transport' %}🚗
+          {% else %}📦{% endif %}
+        </div>
+        <div class="txn-desc">
+          <div class="name">{{ e.description }}</div>
+          <div class="meta">{{ e.category }} · {{ e.date }}</div>
+        </div>
+        <div class="txn-amt">-&#8377;{{ "{:,.0f}".format(e.amount) }}</div>
+        <a href="/delete/{{ e.id }}"><button class="del-btn">✕</button></a>
+      </div>
+      {% endfor %}
+    {% else %}
+      <p style="text-align:center;color:#aaa;padding:20px;">No expenses yet. Add one above!</p>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  const categoryTotals = JSON.parse('{{ cat_totals|default({})|tojson|safe }}');
+  const cats = Object.keys(categoryTotals || {});
+  const vals = Object.values(categoryTotals || {});
+  const colors = {'Hosting':'#1D9E75','Marketing':'#378ADD','Salaries':'#7F77DD','Utilities':'#EF9F27','Transport':'#D85A30','Other':'#888780'};
+  new Chart(document.getElementById('barChart'), {
+    type: 'bar',
+    data: { labels: cats, datasets: [{ data: vals, backgroundColor: cats.map(c=>colors[c]||'#aaa'), borderRadius: 5, borderSkipped: false }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+      scales: { x: { grid: { display: false } }, y: { ticks: { callback: v => '₹'+Math.round(v/1000)+'k' } } } }
+  });
+</script>
+</body>
+</html>
