@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register — ExpenseCloud</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'DM Sans',sans-serif;background:linear-gradient(135deg,#1a1f36 0%,#2d3561 50%,#1a1f36 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;}
+    .card{background:#fff;border-radius:24px;padding:40px;width:100%;max-width:420px;box-shadow:0 24px 64px rgba(0,0,0,0.3);}
+    .logo{display:flex;align-items:center;gap:10px;margin-bottom:32px;justify-content:center;}
+    .logo-box{width:46px;height:46px;border-radius:14px;background:#4caf82;display:flex;align-items:center;justify-content:center;}
+    .logo-text{font-size:20px;font-weight:600;color:#1a1f36;}
+    h2{font-size:22px;font-weight:600;margin-bottom:6px;text-align:center;color:#1a1f36;}
+    .subtitle{font-size:13px;color:#6b7280;text-align:center;margin-bottom:28px;}
+    .fgroup{margin-bottom:16px;}
+    .fgroup label{display:block;font-size:11px;font-weight:600;color:#6b7280;margin-bottom:6px;letter-spacing:0.05em;}
+    .fgroup input{width:100%;padding:12px 14px;border:1.5px solid #e8ecf0;border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:border 0.2s,box-shadow 0.2s;background:#f8fafc;color:#1a1f36;}
+    .fgroup input:focus{border-color:#4caf82;box-shadow:0 0 0 3px rgba(76,175,130,0.12);background:#fff;}
+    .btn{width:100%;padding:13px;background:#4caf82;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;margin-top:4px;}
+    .btn:hover{background:#3d9e6e;transform:translateY(-1px);box-shadow:0 6px 20px rgba(76,175,130,0.4);}
+    .error{background:#fee2e2;color:#c0392b;padding:12px 14px;border-radius:10px;font-size:13px;margin-bottom:16px;text-align:center;border:1px solid #fecaca;}
+    .success{background:#e8f5ee;color:#2d6a4f;padding:12px 14px;border-radius:10px;font-size:13px;margin-bottom:16px;text-align:center;border:1px solid #b7e4c7;}
+    .footer{text-align:center;margin-top:22px;font-size:13px;color:#6b7280;}
+    .footer a{color:#4caf82;text-decoration:none;font-weight:600;}
+    .footer a:hover{text-decoration:underline;}
+    .divider{text-align:center;margin:20px 0;font-size:12px;color:#9ca3af;position:relative;}
+    .divider::before{content:'';position:absolute;top:50%;left:0;right:0;height:1px;background:#e8ecf0;z-index:0;}
+    .divider span{background:#fff;padding:0 12px;position:relative;z-index:1;}
+    .terms{font-size:11px;color:#9ca3af;text-align:center;margin-top:14px;}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">
+      <div class="logo-box">
+        <svg width="24" height="24" viewBox="0 0 22 22" fill="none">
+          <path d="M11 3L18 7.5V14.5L11 19L4 14.5V7.5L11 3Z" fill="white"/>
+        </svg>
+      </div>
+      <span class="logo-text">ExpenseCloud</span>
+    </div>
+
+    <h2>Create account 🚀</h2>
+    <p class="subtitle">Start tracking your business expenses</p>
+
+    {% if error %}
+    <div class="error">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST" action="/register">
+      <div class="fgroup">
+        <label>FULL NAME</label>
+        <input type="text" name="name" placeholder="Your full name" required autofocus>
+      </div>
+      <div class="fgroup">
+        <label>EMAIL ADDRESS</label>
+        <input type="email" name="email" placeholder="you@example.com" required>
+      </div>
+      <div class="fgroup">
+        <label>PASSWORD</label>
+        <input type="password" name="password" placeholder="Create a strong password" required minlength="6">
+      </div>
+      <button type="submit" class="btn">Create Account →</button>
+    </form>
+
+    <div class="divider"><span>or</span></div>
+
+    <div class="footer">
+      Already have an account? <a href="/login">Sign in</a>
+    </div>
+
+    <p class="terms">By registering you agree to our terms of service</p>
+  </div>
+</body>
+</html>
