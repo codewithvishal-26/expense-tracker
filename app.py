@@ -161,6 +161,71 @@ def set_budget():
     conn.close()
     return redirect(url_for('dashboard'))
 
+@app.route('/expenses')
+@login_required
+def expenses():
+    uid = session['user_id']
+    conn = get_db()
+    expenses = conn.execute(
+        'SELECT * FROM expenses WHERE user_id=? ORDER BY date DESC', (uid,)
+    ).fetchall()
+    total = sum(e['amount'] for e in expenses)
+    conn.close()
+    return render_template('expenses.html',
+        expenses=expenses, total=total,
+        user_name=session['user_name'])
+
+@app.route('/reports')
+@login_required
+def reports():
+    uid = session['user_id']
+    conn = get_db()
+    expenses = conn.execute(
+        'SELECT * FROM expenses WHERE user_id=? ORDER BY date DESC', (uid,)
+    ).fetchall()
+    total = sum(e['amount'] for e in expenses)
+    cat_totals = {}
+    for e in expenses:
+        cat_totals[e['category']] = cat_totals.get(e['category'], 0) + e['amount']
+    conn.close()
+    return render_template('reports.html',
+        expenses=expenses, total=total,
+        cat_totals=cat_totals,
+        user_name=session['user_name'])
+
+@app.route('/profile', methods=['GET','POST'])
+@login_required
+def profile():
+    uid = session['user_id']
+    conn = get_db()
+    success = None
+    error = None
+    if request.method == 'POST':
+        name = request.form['name'].strip()
+        email = request.form['email'].strip().lower()
+        new_pw = request.form.get('new_password', '').strip()
+        try:
+            if new_pw:
+                conn.execute(
+                    'UPDATE users SET name=?, email=?, password=? WHERE id=?',
+                    (name, email, hash_pw(new_pw), uid)
+                )
+            else:
+                conn.execute(
+                    'UPDATE users SET name=?, email=? WHERE id=?',
+                    (name, email, uid)
+                )
+            conn.commit()
+            session['user_name'] = name
+            success = '✅ Profile updated successfully!'
+        except:
+            error = '❌ Email already in use by another account.'
+    user = conn.execute('SELECT * FROM users WHERE id=?', (uid,)).fetchone()
+    conn.close()
+    return render_template('profile.html',
+        user=user, success=success, error=error,
+        user_name=session['user_name'])
+
 if __name__ == '__main__':
     init_db()
     app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))

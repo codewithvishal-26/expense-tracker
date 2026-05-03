@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile — ExpenseCloud</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#f0f4f8;--sidebar-bg:#1a1f36;--card:#fff;--green:#4caf82;--green-light:#e8f5ee;--red:#f06565;--text-primary:#1a1f36;--text-secondary:#6b7280;--text-light:#9ca3af;--border:#e8ecf0;--shadow:0 2px 12px rgba(0,0,0,0.06);--radius:16px;--radius-sm:10px;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text-primary);display:flex;min-height:100vh;}
+    .sidebar{width:72px;min-width:72px;background:var(--sidebar-bg);display:flex;flex-direction:column;align-items:center;padding:24px 0;gap:8px;position:fixed;left:0;top:0;bottom:0;z-index:10;}
+    .sidebar-logo{width:42px;height:42px;border-radius:13px;background:var(--green);display:flex;align-items:center;justify-content:center;margin-bottom:20px;}
+    .nav-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;color:#6b7a99;text-decoration:none;}
+    .nav-icon:hover{background:rgba(255,255,255,0.08);color:#fff;}
+    .nav-icon.active{background:var(--green);color:#fff;}
+    .nav-icon svg{width:20px;height:20px;}
+    .sidebar-bottom{margin-top:auto;}
+    .main{margin-left:72px;flex:1;padding:28px;display:flex;flex-direction:column;align-items:center;}
+    .topbar{width:100%;display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;}
+    .topbar h1{font-size:22px;font-weight:600;}
+    .topbar p{font-size:13px;color:var(--text-secondary);margin-top:2px;}
+    .profile-card{background:var(--card);border-radius:var(--radius);padding:36px;box-shadow:var(--shadow);width:100%;max-width:520px;}
+    .profile-avatar{width:72px;height:72px;border-radius:50%;background:var(--green-light);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:600;color:var(--green);margin:0 auto 20px;}
+    .profile-name{text-align:center;font-size:18px;font-weight:600;margin-bottom:4px;}
+    .profile-email{text-align:center;font-size:13px;color:var(--text-secondary);margin-bottom:28px;}
+    .divider{height:1px;background:var(--border);margin-bottom:24px;}
+    .section-title{font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:16px;letter-spacing:0.05em;}
+    .fgroup{margin-bottom:16px;}
+    .fgroup label{display:block;font-size:11px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;letter-spacing:0.04em;}
+    .fgroup input{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:'DM Sans',sans-serif;background:#f8fafc;color:var(--text-primary);outline:none;transition:border 0.2s,box-shadow 0.2s;}
+    .fgroup input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(76,175,130,0.12);background:#fff;}
+    .hint{font-size:11px;color:var(--text-light);margin-top:4px;}
+    .btn-row{display:flex;gap:10px;margin-top:8px;}
+    .save-btn{flex:1;padding:12px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;}
+    .save-btn:hover{background:#3d9e6e;transform:translateY(-1px);}
+    .back-btn{padding:12px 20px;background:none;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;color:var(--text-secondary);cursor:pointer;font-family:'DM Sans',sans-serif;text-decoration:none;display:flex;align-items:center;}
+    .back-btn:hover{background:var(--bg);}
+    .success{background:#e8f5ee;color:#2d6a4f;padding:12px 14px;border-radius:10px;font-size:13px;margin-bottom:16px;border:1px solid #b7e4c7;}
+    .error{background:#fee2e2;color:#c0392b;padding:12px 14px;border-radius:10px;font-size:13px;margin-bottom:16px;border:1px solid #fecaca;}
+    .danger-zone{margin-top:24px;padding-top:24px;border-top:1px solid var(--border);}
+    .logout-btn{width:100%;padding:11px;background:#fee2e2;color:var(--red);border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;text-decoration:none;display:block;text-align:center;}
+    .logout-btn:hover{background:#fecaca;}
+  </style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 3L18 7.5V14.5L11 19L4 14.5V7.5L11 3Z" fill="white"/></svg>
+  </div>
+  <a href="/dashboard" class="nav-icon" title="Dashboard">
+    <svg viewBox="0 0 20 20" fill="currentColor"><rect x="2" y="2" width="7" height="7" rx="2"/><rect x="11" y="2" width="7" height="7" rx="2"/><rect x="2" y="11" width="7" height="7" rx="2"/><rect x="11" y="11" width="7" height="7" rx="2"/></svg>
+  </a>
+  <a href="/expenses" class="nav-icon" title="Expenses">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="14" height="11" rx="2"/><path d="M3 8h14M7 5V3M13 5V3"/></svg>
+  </a>
+  <a href="/reports" class="nav-icon" title="Reports">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 15l4-4 3 3 5-6"/></svg>
+  </a>
+  <a href="/profile" class="nav-icon active" title="Profile">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10" cy="7" r="3"/><path d="M3 17c0-3.31 3.13-6 7-6s7 2.69 7 6"/></svg>
+  </a>
+  <div class="sidebar-bottom">
+    <a href="/logout" class="nav-icon" title="Logout">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 3h4v14h-4M8 14l4-4-4-4M12 10H3"/></svg>
+    </a>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div>
+      <h1>My Profile</h1>
+      <p>Manage your account settings</p>
+    </div>
+  </div>
+
+  <div class="profile-card">
+    <div class="profile-avatar">{{ user.name[:2].upper() }}</div>
+    <div class="profile-name">{{ user.name }}</div>
+    <div class="profile-email">{{ user.email }}</div>
+    <div class="divider"></div>
+
+    {% if success %}
+    <div class="success">{{ success }}</div>
+    {% endif %}
+    {% if error %}
+    <div class="error">{{ error }}</div>
+    {% endif %}
+
+    <div class="section-title">EDIT PROFILE</div>
+    <form method="POST" action="/profile">
+      <div class="fgroup">
+        <label>FULL NAME</label>
+        <input type="text" name="name" value="{{ user.name }}" required>
+      </div>
+      <div class="fgroup">
+        <label>EMAIL ADDRESS</label>
+        <input type="email" name="email" value="{{ user.email }}" required>
+      </div>
+      <div class="fgroup">
+        <label>NEW PASSWORD</label>
+        <input type="password" name="new_password" placeholder="Leave blank to keep current password">
+        <div class="hint">Only fill this if you want to change your password</div>
+      </div>
+      <div class="btn-row">
+        <a href="/dashboard" class="back-btn">← Back</a>
+        <button type="submit" class="save-btn">Save Changes</button>
+      </div>
+    </form>
+
+    <div class="danger-zone">
+      <a href="/logout" class="logout-btn">🚪 Logout from account</a>
+    </div>
+  </div>
+</div>
+</body>
+</html>

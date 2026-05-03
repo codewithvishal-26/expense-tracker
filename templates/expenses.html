@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Expenses — ExpenseCloud</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#f0f4f8;--sidebar-bg:#1a1f36;--card:#fff;--green:#4caf82;--green-light:#e8f5ee;--red:#f06565;--text-primary:#1a1f36;--text-secondary:#6b7280;--text-light:#9ca3af;--border:#e8ecf0;--shadow:0 2px 12px rgba(0,0,0,0.06);--radius:16px;--radius-sm:10px;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text-primary);display:flex;min-height:100vh;}
+    .sidebar{width:72px;min-width:72px;background:var(--sidebar-bg);display:flex;flex-direction:column;align-items:center;padding:24px 0;gap:8px;position:fixed;left:0;top:0;bottom:0;z-index:10;}
+    .sidebar-logo{width:42px;height:42px;border-radius:13px;background:var(--green);display:flex;align-items:center;justify-content:center;margin-bottom:20px;}
+    .nav-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;color:#6b7a99;text-decoration:none;}
+    .nav-icon:hover{background:rgba(255,255,255,0.08);color:#fff;}
+    .nav-icon.active{background:var(--green);color:#fff;}
+    .nav-icon svg{width:20px;height:20px;}
+    .sidebar-bottom{margin-top:auto;}
+    .main{margin-left:72px;flex:1;padding:28px;}
+    .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;}
+    .topbar h1{font-size:22px;font-weight:600;}
+    .topbar p{font-size:13px;color:var(--text-secondary);margin-top:2px;}
+    .topbar-right{display:flex;align-items:center;gap:12px;}
+    .avatar{width:38px;height:38px;border-radius:50%;background:var(--green-light);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--green);text-decoration:none;}
+    .add-btn{background:var(--green);color:#fff;border:none;border-radius:var(--radius-sm);padding:10px 18px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;}
+    .add-btn:hover{background:#3d9e6e;transform:translateY(-1px);}
+    .card{background:var(--card);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow);margin-bottom:20px;}
+    .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+    .card-title{font-size:15px;font-weight:600;}
+    .form-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:12px;align-items:end;}
+    .fgroup label{display:block;font-size:11px;color:var(--text-secondary);margin-bottom:5px;font-weight:500;}
+    .fgroup input,.fgroup select{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text-primary);outline:none;transition:border 0.2s;}
+    .fgroup input:focus,.fgroup select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(76,175,130,0.12);background:#fff;}
+    .save-btn{padding:10px 20px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;}
+    .save-btn:hover{background:#3d9e6e;}
+    .filter-row{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+    .filter-btn{padding:6px 14px;border-radius:20px;border:1.5px solid var(--border);background:#fff;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--text-secondary);transition:all 0.2s;}
+    .filter-btn.on{background:var(--green);color:#fff;border-color:var(--green);}
+    .txn{display:flex;align-items:center;gap:12px;padding:11px 8px;border-bottom:1px solid var(--border);border-radius:8px;transition:background 0.15s;}
+    .txn:last-child{border-bottom:none;}
+    .txn:hover{background:#f7f9fb;}
+    .txn-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
+    .txn-name{font-size:13px;font-weight:500;}
+    .txn-meta{font-size:11px;color:var(--text-secondary);margin-top:2px;}
+    .txn-amt{font-size:13px;font-weight:600;color:var(--red);}
+    .del-btn{background:none;border:none;color:var(--text-light);cursor:pointer;font-size:13px;padding:4px 7px;border-radius:6px;margin-left:4px;}
+    .del-btn:hover{background:#fee2e2;color:var(--red);}
+    .empty{text-align:center;padding:40px;color:var(--text-light);font-size:13px;}
+    .summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px;}
+    .scard{background:var(--card);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);}
+    .scard-label{font-size:12px;color:var(--text-secondary);margin-bottom:6px;}
+    .scard-value{font-size:22px;font-weight:600;}
+    @media(max-width:768px){.form-grid{grid-template-columns:1fr 1fr}.summary-grid{grid-template-columns:1fr 1fr}}
+  </style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 3L18 7.5V14.5L11 19L4 14.5V7.5L11 3Z" fill="white"/></svg>
+  </div>
+  <a href="/dashboard" class="nav-icon" title="Dashboard">
+    <svg viewBox="0 0 20 20" fill="currentColor"><rect x="2" y="2" width="7" height="7" rx="2"/><rect x="11" y="2" width="7" height="7" rx="2"/><rect x="2" y="11" width="7" height="7" rx="2"/><rect x="11" y="11" width="7" height="7" rx="2"/></svg>
+  </a>
+  <a href="/expenses" class="nav-icon active" title="Expenses">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="14" height="11" rx="2"/><path d="M3 8h14M7 5V3M13 5V3"/></svg>
+  </a>
+  <a href="/reports" class="nav-icon" title="Reports">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 15l4-4 3 3 5-6"/></svg>
+  </a>
+  <a href="/profile" class="nav-icon" title="Profile">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10" cy="7" r="3"/><path d="M3 17c0-3.31 3.13-6 7-6s7 2.69 7 6"/></svg>
+  </a>
+  <div class="sidebar-bottom">
+    <a href="/logout" class="nav-icon" title="Logout">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 3h4v14h-4M8 14l4-4-4-4M12 10H3"/></svg>
+    </a>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div>
+      <h1>All Expenses</h1>
+      <p>Manage and track all your transactions</p>
+    </div>
+    <div class="topbar-right">
+      <a href="/profile" class="avatar" title="Profile">{{ user_name[:2].upper() }}</a>
+    </div>
+  </div>
+
+  <div class="summary-grid">
+    <div class="scard">
+      <div class="scard-label">Total Spent</div>
+      <div class="scard-value">&#8377;{{ "{:,.0f}".format(total) }}</div>
+    </div>
+    <div class="scard">
+      <div class="scard-label">Total Records</div>
+      <div class="scard-value">{{ expenses|length }}</div>
+    </div>
+    <div class="scard">
+      <div class="scard-label">Avg per Transaction</div>
+      <div class="scard-value">&#8377;{{ "{:,.0f}".format(total / expenses|length) if expenses else 0 }}</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Add New Expense</span>
+    </div>
+    <form method="POST" action="/add">
+      <div class="form-grid">
+        <div class="fgroup"><label>DESCRIPTION</label><input name="description" placeholder="e.g. Cloud hosting" required></div>
+        <div class="fgroup"><label>AMOUNT (₹)</label><input name="amount" type="number" placeholder="0" min="1" required></div>
+        <div class="fgroup"><label>CATEGORY</label>
+          <select name="category">
+            <option>Hosting</option><option>Marketing</option><option>Salaries</option>
+            <option>Utilities</option><option>Transport</option><option>Other</option>
+          </select>
+        </div>
+        <div class="fgroup"><label>DATE</label><input name="date" type="date" required></div>
+        <button type="submit" class="save-btn">Add</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Transactions <span style="font-size:12px;color:var(--text-secondary);font-weight:400">({{ expenses|length }} records)</span></span>
+    </div>
+    {% if expenses %}
+      {% for e in expenses %}
+      <div class="txn">
+        <div class="txn-icon" style="background:{% if e.category=='Hosting' %}#e8f5ee{% elif e.category=='Marketing' %}#eef3fd{% elif e.category=='Salaries' %}#f0eeff{% elif e.category=='Utilities' %}#fdf3e3{% elif e.category=='Transport' %}#fde8e8{% else %}#f0f4f8{% endif %}">
+          {% if e.category=='Hosting' %}☁️{% elif e.category=='Marketing' %}📣{% elif e.category=='Salaries' %}👥{% elif e.category=='Utilities' %}⚡{% elif e.category=='Transport' %}🚗{% else %}📦{% endif %}
+        </div>
+        <div style="flex:1">
+          <div class="txn-name">{{ e.description }}</div>
+          <div class="txn-meta">{{ e.category }} · {{ e.date }}</div>
+        </div>
+        <div class="txn-amt">-&#8377;{{ "{:,.0f}".format(e.amount) }}</div>
+        <a href="/delete/{{ e.id }}"><button class="del-btn">✕</button></a>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty">📭 No expenses yet. Add your first one above!</div>
+    {% endif %}
+  </div>
+</div>
+</body>
+</html>
