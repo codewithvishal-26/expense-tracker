@@ -42,6 +42,17 @@ def init_db():
         user_id INTEGER PRIMARY KEY,
         amount REAL NOT NULL
     )''')
+
+    conn.execute('''CREATE TABLE IF NOT EXISTS bills (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        amount REAL NOT NULL,
+        due_date TEXT NOT NULL,
+        category TEXT NOT NULL,
+        status TEXT DEFAULT 'unpaid'
+    )''')
+    
     conn.commit()
     conn.close()
 
@@ -225,6 +236,64 @@ def profile():
     return render_template('profile.html',
         user=user, success=success, error=error,
         user_name=session['user_name'])
+
+@app.route('/bills')
+@login_required
+def bills():
+    uid = session['user_id']
+    conn = get_db()
+    bills = conn.execute(
+        'SELECT * FROM bills WHERE user_id=? ORDER BY due_date ASC', (uid,)
+    ).fetchall()
+    conn.close()
+    from datetime import date
+    today = date.today()
+    return render_template('bills.html',
+        bills=bills,
+        today=str(today),
+        user_name=session['user_name'])
+
+@app.route('/bills/add', methods=['POST'])
+@login_required
+def add_bill():
+    conn = get_db()
+    conn.execute(
+        'INSERT INTO bills (user_id, name, amount, due_date, category, status) VALUES (?,?,?,?,?,?)',
+        (session['user_id'], request.form['name'],
+         float(request.form['amount']),
+         request.form['due_date'],
+         request.form['category'],
+         'unpaid')
+    )
+    conn.commit()
+    conn.close()
+    return redirect(url_for('bills'))
+
+@app.route('/bills/paid/<int:id>')
+@login_required
+def mark_paid(id):
+    conn = get_db()
+    conn.execute(
+        'UPDATE bills SET status=? WHERE id=? AND user_id=?',
+        ('paid', id, session['user_id'])
+    )
+    conn.commit()
+    conn.close()
+    return redirect(url_for('bills'))
+
+@app.route('/bills/delete/<int:id>')
+@login_required
+def delete_bill(id):
+    conn = get_db()
+    conn.execute(
+        'DELETE FROM bills WHERE id=? AND user_id=?',
+        (id, session['user_id'])
+    )
+
+    
+    conn.commit()
+    conn.close()
+    return redirect(url_for('bills'))
 
 if __name__ == '__main__':
     init_db()

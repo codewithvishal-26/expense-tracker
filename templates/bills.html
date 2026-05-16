@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bill Reminders — ExpenseCloud</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#f0f4f8;--sidebar-bg:#1a1f36;--card:#fff;--green:#4caf82;--green-light:#e8f5ee;--red:#f06565;--orange:#f5a623;--text-primary:#1a1f36;--text-secondary:#6b7280;--text-light:#9ca3af;--border:#e8ecf0;--shadow:0 2px 12px rgba(0,0,0,0.06);--radius:16px;--radius-sm:10px;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text-primary);display:flex;min-height:100vh;}
+    .sidebar{width:72px;min-width:72px;background:var(--sidebar-bg);display:flex;flex-direction:column;align-items:center;padding:24px 0;gap:8px;position:fixed;left:0;top:0;bottom:0;z-index:10;}
+    .sidebar-logo{width:42px;height:42px;border-radius:13px;background:var(--green);display:flex;align-items:center;justify-content:center;margin-bottom:20px;}
+    .nav-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;color:#6b7a99;text-decoration:none;}
+    .nav-icon:hover{background:rgba(255,255,255,0.08);color:#fff;}
+    .nav-icon.active{background:var(--green);color:#fff;}
+    .nav-icon svg{width:20px;height:20px;}
+    .sidebar-bottom{margin-top:auto;}
+    .main{margin-left:72px;flex:1;padding:28px;}
+    .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;}
+    .topbar h1{font-size:22px;font-weight:600;}
+    .topbar p{font-size:13px;color:var(--text-secondary);margin-top:2px;}
+    .topbar-right{display:flex;align-items:center;gap:12px;}
+    .avatar{width:38px;height:38px;border-radius:50%;background:var(--green-light);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--green);text-decoration:none;}
+    .summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px;}
+    .scard{background:var(--card);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);}
+    .scard-label{font-size:12px;color:var(--text-secondary);margin-bottom:6px;}
+    .scard-value{font-size:22px;font-weight:600;}
+    .scard-sub{font-size:12px;margin-top:4px;}
+    .card{background:var(--card);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow);margin-bottom:20px;}
+    .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+    .card-title{font-size:15px;font-weight:600;}
+    .form-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:12px;align-items:end;}
+    .fgroup label{display:block;font-size:11px;color:var(--text-secondary);margin-bottom:5px;font-weight:500;}
+    .fgroup input,.fgroup select{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text-primary);outline:none;transition:border 0.2s;}
+    .fgroup input:focus,.fgroup select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(76,175,130,0.12);background:#fff;}
+    .save-btn{padding:10px 20px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;}
+    .save-btn:hover{background:#3d9e6e;}
+    .bill-row{display:flex;align-items:center;gap:12px;padding:12px 8px;border-bottom:1px solid var(--border);border-radius:8px;transition:background 0.15s;}
+    .bill-row:last-child{border-bottom:none;}
+    .bill-row:hover{background:#f7f9fb;}
+    .bill-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+    .bill-info{flex:1;}
+    .bill-name{font-size:13px;font-weight:500;}
+    .bill-meta{font-size:11px;color:var(--text-secondary);margin-top:2px;}
+    .bill-amt{font-size:14px;font-weight:600;color:var(--text-primary);margin-right:8px;}
+    .badge{display:inline-block;font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px;margin-right:8px;}
+    .badge-overdue{background:#fee2e2;color:#c0392b;}
+    .badge-soon{background:#fef3cd;color:#b45309;}
+    .badge-upcoming{background:#e8f5ee;color:#2d6a4f;}
+    .badge-paid{background:#f0f4f8;color:#6b7280;}
+    .action-btn{padding:5px 12px;border-radius:7px;font-size:11px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;border:none;transition:all 0.2s;}
+    .paid-btn{background:var(--green-light);color:var(--green);}
+    .paid-btn:hover{background:var(--green);color:#fff;}
+    .del-btn{background:none;border:none;color:var(--text-light);cursor:pointer;font-size:13px;padding:4px 7px;border-radius:6px;margin-left:4px;}
+    .del-btn:hover{background:#fee2e2;color:var(--red);}
+    .empty{text-align:center;padding:40px;color:var(--text-light);font-size:13px;}
+    .alert-banner{background:#fff8e1;border:1px solid #f5c842;border-radius:var(--radius-sm);padding:12px 16px;margin-bottom:16px;font-size:13px;color:#92670a;display:flex;align-items:center;gap:8px;}
+    .paid-row{opacity:0.5;}
+    @media(max-width:768px){.form-grid{grid-template-columns:1fr 1fr}.summary-grid{grid-template-columns:1fr 1fr}}
+  </style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 3L18 7.5V14.5L11 19L4 14.5V7.5L11 3Z" fill="white"/></svg>
+  </div>
+  <a href="/dashboard" class="nav-icon" title="Dashboard">
+    <svg viewBox="0 0 20 20" fill="currentColor"><rect x="2" y="2" width="7" height="7" rx="2"/><rect x="11" y="2" width="7" height="7" rx="2"/><rect x="2" y="11" width="7" height="7" rx="2"/><rect x="11" y="11" width="7" height="7" rx="2"/></svg>
+  </a>
+  <a href="/expenses" class="nav-icon" title="Expenses">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="14" height="11" rx="2"/><path d="M3 8h14M7 5V3M13 5V3"/></svg>
+  </a>
+  <a href="/reports" class="nav-icon" title="Reports">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 15l4-4 3 3 5-6"/></svg>
+  </a>
+  <a href="/profile" class="nav-icon" title="Profile">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10" cy="7" r="3"/><path d="M3 17c0-3.31 3.13-6 7-6s7 2.69 7 6"/></svg>
+  </a>
+  <a href="/bills" class="nav-icon active" title="Bill Reminders">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="2" width="14" height="16" rx="2"/><path d="M7 6h6M7 9h6M7 12h4"/></svg>
+  </a>
+  <div class="sidebar-bottom">
+    <a href="/logout" class="nav-icon" title="Logout">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 3h4v14h-4M8 14l4-4-4-4M12 10H3"/></svg>
+    </a>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div>
+      <h1>Bill Reminders</h1>
+      <p>Track and manage your upcoming payments</p>
+    </div>
+    <div class="topbar-right">
+      <a href="/profile" class="avatar">{{ user_name[:2].upper() }}</a>
+    </div>
+  </div>
+
+  {% set unpaid = bills|selectattr('status','eq','unpaid')|list %}
+  {% set overdue = unpaid|selectattr('due_date','lt',today)|list %}
+  {% set due_soon = unpaid|selectattr('due_date','ge',today)|list %}
+
+  <!-- SUMMARY CARDS -->
+  <div class="summary-grid">
+    <div class="scard">
+      <div class="scard-label">Total Bills</div>
+      <div class="scard-value">{{ bills|length }}</div>
+      <div class="scard-sub" style="color:var(--text-secondary)">All time</div>
+    </div>
+    <div class="scard">
+      <div class="scard-label">Unpaid Bills</div>
+      <div class="scard-value" style="color:var(--orange)">{{ unpaid|length }}</div>
+      <div class="scard-sub" style="color:var(--orange)">Pending payment</div>
+    </div>
+    <div class="scard">
+      <div class="scard-label">Overdue Bills</div>
+      <div class="scard-value" style="color:var(--red)">{{ overdue|length }}</div>
+      <div class="scard-sub" style="color:var(--red)">Needs attention!</div>
+    </div>
+  </div>
+
+  <!-- ALERT BANNER -->
+  {% if overdue %}
+  <div class="alert-banner">
+    ⚠️ You have <strong>{{ overdue|length }} overdue bill(s)</strong> that need immediate attention!
+  </div>
+  {% endif %}
+
+  <!-- ADD BILL FORM -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Add New Bill</span>
+    </div>
+    <form method="POST" action="/bills/add">
+      <div class="form-grid">
+        <div class="fgroup"><label>BILL NAME</label><input name="name" placeholder="e.g. Electricity Bill" required></div>
+        <div class="fgroup"><label>AMOUNT (₹)</label><input name="amount" type="number" placeholder="0" min="1" required></div>
+        <div class="fgroup"><label>CATEGORY</label>
+          <select name="category">
+            <option>Utilities</option>
+            <option>Rent</option>
+            <option>Internet</option>
+            <option>Hosting</option>
+            <option>Insurance</option>
+            <option>Subscription</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="fgroup"><label>DUE DATE</label><input name="due_date" type="date" required></div>
+        <button type="submit" class="save-btn">Add Bill</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- BILLS LIST -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">All Bills <span style="font-size:12px;color:var(--text-secondary);font-weight:400">({{ bills|length }} total)</span></span>
+    </div>
+
+    {% if bills %}
+      {% for b in bills %}
+      {% set is_overdue = b.status == 'unpaid' and b.due_date < today %}
+      {% set is_paid = b.status == 'paid' %}
+      <div class="bill-row {{ 'paid-row' if is_paid else '' }}">
+        <div class="bill-icon" style="background:{% if is_overdue %}#fee2e2{% elif is_paid %}#f0f4f8{% else %}#fdf3e3{% endif %}">
+          {% if b.category=='Utilities' %}⚡
+          {% elif b.category=='Rent' %}🏠
+          {% elif b.category=='Internet' %}🌐
+          {% elif b.category=='Hosting' %}☁️
+          {% elif b.category=='Insurance' %}🛡️
+          {% elif b.category=='Subscription' %}📱
+          {% else %}📄{% endif %}
+        </div>
+        <div class="bill-info">
+          <div class="bill-name">{{ b.name }}</div>
+          <div class="bill-meta">{{ b.category }} · Due: {{ b.due_date }}</div>
+        </div>
+        <div class="bill-amt">₹{{ "{:,.0f}".format(b.amount) }}</div>
+        {% if is_paid %}
+          <span class="badge badge-paid">✓ Paid</span>
+        {% elif is_overdue %}
+          <span class="badge badge-overdue">🔴 Overdue</span>
+          <a href="/bills/paid/{{ b.id }}"><button class="action-btn paid-btn">Mark Paid</button></a>
+        {% else %}
+          <span class="badge badge-upcoming">🟢 Upcoming</span>
+          <a href="/bills/paid/{{ b.id }}"><button class="action-btn paid-btn">Mark Paid</button></a>
+        {% endif %}
+        <a href="/bills/delete/{{ b.id }}"><button class="del-btn">✕</button></a>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty">
+        <div style="font-size:36px;margin-bottom:10px">🔔</div>
+        No bills added yet. Add your first bill above!
+      </div>
+    {% endif %}
+  </div>
+</div>
+</body>
+</html>
