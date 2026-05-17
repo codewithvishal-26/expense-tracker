@@ -295,6 +295,134 @@ def delete_bill(id):
     conn.close()
     return redirect(url_for('bills'))
 
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from flask import make_response
+import io
+import openpyxl
+
+@app.route('/export/pdf')
+@login_required
+def export_pdf():
+    uid = session['user_id']
+    conn = get_db()
+    expenses = conn.execute(
+        'SELECT * FROM expenses WHERE user_id=? ORDER BY date DESC', (uid,)
+    ).fetchall()
+    total = sum(e['amount'] for e in expenses)
+    conn.close()
+
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4)
+    styles = getSampleStyleSheet()
+    elements = []
+
+    # Title
+    elements.append(Paragraph("ExpenseCloud - Expense Report", styles['Title']))
+    elements.append(Paragraph(f"User: {session['user_name']}", styles['Normal']))
+    elements.append(Spacer(1, 20))
+
+    # Table header
+    data = [['#', 'Description', 'Category', 'Date', 'Amount (₹)']]
+
+    # Table rows
+    for i, e in enumerate(expenses, 1):
+        data.append([
+            str(i),
+            e['description'],
+            e['category'],
+            e['date'],
+            f"₹{e['amount']:,.0f}"
+        ])
+
+    # Total row
+    data.append(['', '', '', 'TOTAL', f"₹{total:,.0f}"])
+
+    # Table style
+    table = Table(data, colWidths=[30, 180, 100, 90, 90])
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#1a1f36')),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0,0), (-1,0), 11),
+        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+        ('ALIGN', (1,1), (1,-1), 'LEFT'),
+        ('BACKGROUND', (0,-1), (-1,-1), colors.HexColor('#e8f5ee')),
+        ('FONTNAME', (0,-1), (-1,-1), 'Helvetica-Bold'),
+        ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#e8ecf0')),
+        ('ROWBACKGROUNDS', (0,1), (-1,-2), [colors.white, colors.HexColor('#f8fafc')]),
+        ('FONTSIZE', (0,1), (-1,-1), 10),
+        ('TOPPADDING', (0,0), (-1,-1), 8),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 8),
+    ]))
+
+    elements.append(table)
+    doc.build(elements)
+
+    buffer.seek(0)
+    response = make_response(buffer.read())
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = 'attachment; filename=expense_report.pdf'
+    return response
+
+
+@app.route('/export/excel')
+@login_required
+def export_excel():
+    uid = session['user_id']
+    conn = get_db()
+    expenses = conn.execute(
+        'SELECT * FROM expenses WHERE user_id=? ORDER BY date DESC', (uid,)
+    ).fetchall()
+    total = sum(e['amount'] for e in expenses)
+    conn.close()
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Expenses"
+
+    # Header row
+    headers = ['#', 'Description', 'Category', 'Date', 'Amount (₹)']
+    ws.append(headers)
+
+    # Style header
+    from openpyxl.styles import Font, PatternFill, Alignment
+    header_fill = PatternFill(start_color='1a1f36', end_color='1a1f36', fill_type='solid')
+    for col in range(1, 6):
+        cell = ws.cell(row=1, column=col)
+        cell.font = Font(bold=True, color='FFFFFF')
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal='center')
+
+    # Data rows
+    for i, e in enumerate(expenses, 1):
+        ws.append([i, e['description'], e['category'], e['date'], e['amount']])
+
+    # Total row
+    ws.append(['', '', '', 'TOTAL', total])
+    total_row = ws.max_row
+    for col in range(1, 6):
+        cell = ws.cell(row=total_row, column=col)
+        cell.font = Font(bold=True)
+
+    # Column widths
+    ws.column_dimensions['A'].width = 5
+    ws.column_dimensions['B'].width = 30
+    ws.column_dimensions['C'].width = 15
+    ws.column_dimensions['D'].width = 15
+    ws.column_dimensions['E'].width = 15
+
+    buffer = io.BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+
+    response = make_response(buffer.read())
+    response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    response.headers['Content-Disposition'] = 'attachment; filename=expense_report.xlsx'
+    return response
+
 if __name__ == '__main__':
     init_db()
     app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))

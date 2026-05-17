@@ -106,7 +106,21 @@
   </div>
 
   <div class="card">
-    <div class="card-title">Summary Statistics</div>
+    <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
+  <span class="card-title">Summary Statistics</span>
+  <div style="display:flex;gap:8px;">
+    <a href="/export/pdf">
+      <button style="padding:8px 16px;background:#f06565;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;">
+        📄 Export PDF
+      </button>
+    </a>
+    <a href="/export/excel">
+      <button style="padding:8px 16px;background:#4caf82;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;">
+        📊 Export Excel
+      </button>
+    </a>
+  </div>
+</div>
     <div class="stat-row"><span style="color:var(--text-secondary)">Total Expenses</span><strong>&#8377;{{ "{:,.0f}".format(total) }}</strong></div>
     <div class="stat-row"><span style="color:var(--text-secondary)">Number of Transactions</span><strong>{{ expenses|length }}</strong></div>
     <div class="stat-row"><span style="color:var(--text-secondary)">Average Transaction</span><strong>&#8377;{{ "{:,.0f}".format(total/expenses|length) if expenses else 0 }}</strong></div>

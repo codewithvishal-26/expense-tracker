@@ -129,10 +129,21 @@
     </form>
   </div>
 
-  <div class="card">
-    <div class="card-header">
-      <span class="card-title">Transactions <span style="font-size:12px;color:var(--text-secondary);font-weight:400">({{ expenses|length }} records)</span></span>
-    </div>
+  <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
+  <span class="card-title">Transactions <span style="font-size:12px;color:var(--text-secondary);font-weight:400">({{ expenses|length }} records)</span></span>
+  <div style="display:flex;gap:8px;">
+    <a href="/export/pdf">
+      <button style="padding:8px 16px;background:#f06565;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;">
+        📄 PDF
+      </button>
+    </a>
+    <a href="/export/excel">
+      <button style="padding:8px 16px;background:#4caf82;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;">
+        📊 Excel
+      </button>
+    </a>
+  </div>
+</div>
     {% if expenses %}
       {% for e in expenses %}
       <div class="txn">
